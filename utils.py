@@ -53,7 +53,6 @@ def combine_related_columns(df: pd.DataFrame):
                                         + df_cpy.pop('TechSupport').values * SECURITY_WEIGHTS.get('support')
     df_cpy['InternetStreamingScore'] = df_cpy.pop('StreamingTV').values * TV_STREAM_WEIGHT \
                                         + df_cpy.pop('StreamingMovies').values * (1 - TV_STREAM_WEIGHT)
-    df_cpy.insert(0, 'Discontinued', df_cpy.pop('Discontinued'))
     return df_cpy
 
 def write_submission(preds):
