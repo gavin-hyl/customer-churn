@@ -26,8 +26,8 @@ def numerize_csv(path: str, train: bool=True):
     # that's probably correlated with discontinuation in some way.
     df['PaymentMethod'] = df['PaymentMethod'].map({
         'Credit card (automatic)': 3,
-        'Electronic check': 2,
-        'Bank transfer (automatic)': 1,
+        'Electronic check': 1,
+        'Bank transfer (automatic)': 2,
         'Mailed check': 0})
     df.drop('customerID', axis=1, inplace=True)
     mean = df.mean()
@@ -37,13 +37,13 @@ def numerize_csv(path: str, train: bool=True):
 def combine_related_columns(df: pd.DataFrame):
     ''' Takes a project dataframe and combines its related rows. '''
     df_cpy = df
-    PHONE_SERVICE_WEIGHT = 0.7
-    TV_STREAM_WEIGHT = 0.5
+    PHONE_SERVICE_WEIGHT = 0.2
+    TV_STREAM_WEIGHT = 0.9
     SECURITY_WEIGHTS = {
-        'security': 0.25,
-        'backup': 0.25,
-        'protection': 0.25,
-        'support': 0.25
+        'security': 0.4,
+        'backup': 0.4,
+        'protection': 0.1,
+        'support': 0.1
     }
     df_cpy['PhoneUsageScore'] = df_cpy.pop('PhoneService').values * PHONE_SERVICE_WEIGHT \
                                 + df_cpy.pop('MultipleLines').values * (1 - PHONE_SERVICE_WEIGHT)
