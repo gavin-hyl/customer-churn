@@ -1,6 +1,13 @@
 import pandas as pd
 
-def numerize_csv(path: str, train: bool=True):
+def expand_class(df: pd.DataFrame, header: str, classes: list[str]):
+    df_cpy = df
+    for class_name in classes:
+        df_cpy[class_name] = (df_cpy[header] == class_name).astype(int)
+    df_cpy.drop(header, axis='columns', inplace=True)
+    return df_cpy
+
+def numerize_csv(path: str, train: bool=True, expand_classes: bool=False):
     ''' Takes a path to a project csv and converts its entries to numerical '''
     df = pd.read_csv(path)
     df['gender'] = (df['gender'] == 'Female').astype(int)
@@ -8,9 +15,6 @@ def numerize_csv(path: str, train: bool=True):
     for header in ['Partner', 'Dependents', 'PhoneService', 'PaperlessBilling']:
         df[header] = (df[header] == 'Yes').astype(int)
     
-    if train:
-        df['Discontinued'] = (df['Discontinued'] == 'Yes').astype(int)
-
     for header in ['MultipleLines', 'OnlineSecurity', 'OnlineBackup', \
                 'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies']:
         # some here have the value no phone/internet service, which are casted to 0
@@ -20,18 +24,26 @@ def numerize_csv(path: str, train: bool=True):
         # lines that need normalization
         df[header] /= (max(df[header]) - min(df[header]))
 
-    df['InternetService'] = df['InternetService'].map({'Fiber optic': 2, 'DSL': 1, 'No': 0})
-    df['Contract'] = df['Contract'].map({'Two year': 2, 'One year': 1, 'Month-to-month': 0})
-    # Note that the PaymentMethod column contains some entries that are marked automatic
-    # that's probably correlated with discontinuation in some way.
-    df['PaymentMethod'] = df['PaymentMethod'].map({
-        'Credit card (automatic)': 3,
-        'Electronic check': 1,
-        'Bank transfer (automatic)': 2,
-        'Mailed check': 0})
+    if train:
+        df['Discontinued'] = (df['Discontinued'] == 'Yes').astype(int)
+
+    if not expand_classes:
+        df['InternetService'] = df['InternetService'].map({'Fiber optic': 2, 'DSL': 1, 'No': 0})
+        df['Contract'] = df['Contract'].map({'Two year': 2, 'One year': 1, 'Month-to-month': 0})
+        # Note that the PaymentMethod column contains some entries that are marked automatic
+        # that's probably correlated with discontinuation in some way.
+        df['PaymentMethod'] = df['PaymentMethod'].map({
+            'Credit card (automatic)': 3,
+            'Electronic check': 1,
+            'Bank transfer (automatic)': 2,
+            'Mailed check': 0})
+    else:
+        df = expand_class(df, 'PaymentMethod', ['Credit card (automatic)', 'Electronic check', 'Bank transfer (automatic)', 'Mailed check'])
+        df = expand_class(df, 'Contract', ['Two year', 'One year', 'Month-to-month'])
+        df = expand_class(df, 'InternetService', ['Fiber optic', 'DSL', 'No'])
+
     df.drop('customerID', axis=1, inplace=True)
-    mean = df.mean()
-    df.fillna(mean, inplace=True)
+    df.fillna(0, inplace=True)
     return df
 
 def combine_related_columns(df: pd.DataFrame):
