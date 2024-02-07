@@ -1,13 +1,15 @@
 import pandas as pd
 
-def numerize_csv(path: str):
+def numerize_csv(path: str, train: bool=True):
     ''' Takes a path to a project csv and converts its entries to numerical '''
     df = pd.read_csv(path)
     df['gender'] = (df['gender'] == 'Female').astype(int)
 
-    for header in ['Partner', 'Dependents', 'PhoneService', 'PaperlessBilling', \
-                'Discontinued']:
+    for header in ['Partner', 'Dependents', 'PhoneService', 'PaperlessBilling']:
         df[header] = (df[header] == 'Yes').astype(int)
+    
+    if train:
+        df['Discontinued'] = (df['Discontinued'] == 'Yes').astype(int)
 
     for header in ['MultipleLines', 'OnlineSecurity', 'OnlineBackup', \
                 'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies']:
