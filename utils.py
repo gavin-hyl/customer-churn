@@ -1,13 +1,15 @@
 import pandas as pd
 
-def numerize_csv(path: str):
+def numerize_csv(path: str, train: bool=True):
     ''' Takes a path to a project csv and converts its entries to numerical '''
     df = pd.read_csv(path)
     df['gender'] = (df['gender'] == 'Female').astype(int)
 
-    for header in ['Partner', 'Dependents', 'PhoneService', 'PaperlessBilling', \
-                'Discontinued']:
+    for header in ['Partner', 'Dependents', 'PhoneService', 'PaperlessBilling']:
         df[header] = (df[header] == 'Yes').astype(int)
+    
+    if train:
+        df['Discontinued'] = (df['Discontinued'] == 'Yes').astype(int)
 
     for header in ['MultipleLines', 'OnlineSecurity', 'OnlineBackup', \
                 'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies']:
@@ -24,8 +26,8 @@ def numerize_csv(path: str):
     # that's probably correlated with discontinuation in some way.
     df['PaymentMethod'] = df['PaymentMethod'].map({
         'Credit card (automatic)': 3,
-        'Electronic check': 2,
-        'Bank transfer (automatic)': 1,
+        'Electronic check': 1,
+        'Bank transfer (automatic)': 2,
         'Mailed check': 0})
     df.drop('customerID', axis=1, inplace=True)
     mean = df.mean()
@@ -66,13 +68,13 @@ def numerize_csv_test(path: str):
 def combine_related_columns(df: pd.DataFrame):
     ''' Takes a project dataframe and combines its related rows. '''
     df_cpy = df
-    PHONE_SERVICE_WEIGHT = 0.7
-    TV_STREAM_WEIGHT = 0.5
+    PHONE_SERVICE_WEIGHT = 0.2
+    TV_STREAM_WEIGHT = 0.9
     SECURITY_WEIGHTS = {
-        'security': 0.25,
-        'backup': 0.25,
-        'protection': 0.25,
-        'support': 0.25
+        'security': 0.4,
+        'backup': 0.4,
+        'protection': 0.1,
+        'support': 0.1
     }
     df_cpy['PhoneUsageScore'] = df_cpy.pop('PhoneService').values * PHONE_SERVICE_WEIGHT \
                                 + df_cpy.pop('MultipleLines').values * (1 - PHONE_SERVICE_WEIGHT)
@@ -82,7 +84,6 @@ def combine_related_columns(df: pd.DataFrame):
                                         + df_cpy.pop('TechSupport').values * SECURITY_WEIGHTS.get('support')
     df_cpy['InternetStreamingScore'] = df_cpy.pop('StreamingTV').values * TV_STREAM_WEIGHT \
                                         + df_cpy.pop('StreamingMovies').values * (1 - TV_STREAM_WEIGHT)
-    df_cpy.insert(0, 'Discontinued', df_cpy.pop('Discontinued'))
     return df_cpy
 
 def combine_related_columns_test(df: pd.DataFrame):
