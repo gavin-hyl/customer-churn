@@ -28,7 +28,8 @@ def numerize_csv(path: str):
         'Bank transfer (automatic)': 1,
         'Mailed check': 0})
     df.drop('customerID', axis=1, inplace=True)
-    df.dropna(inplace=True)
+    mean = df.mean()
+    df.fillna(mean, inplace=True)
     return df
 
 def combine_related_columns(df: pd.DataFrame):
