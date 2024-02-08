@@ -56,7 +56,7 @@ def numerize_csv(path: str, train: bool=True, expand_classes: bool=False, target
     df.fillna(0, inplace=True)
     return df
 
-def numerize_csv_test(path: str):
+def numerize_csv_test(path: str, expand_classes: bool=False):
     ''' Takes a path to a project csv and converts its entries to numerical '''
     df = pd.read_csv(path)
     df['gender'] = (df['gender'] == 'Female').astype(int)
@@ -73,15 +73,21 @@ def numerize_csv_test(path: str):
         # lines that need normalization
         df[header] /= (max(df[header]) - min(df[header]))
 
-    df['InternetService'] = df['InternetService'].map({'Fiber optic': 2, 'DSL': 1, 'No': 0})
-    df['Contract'] = df['Contract'].map({'Two year': 2, 'One year': 1, 'Month-to-month': 0})
-    # Note that the PaymentMethod column contains some entries that are marked automatic
-    # that's probably correlated with discontinuation in some way.
-    df['PaymentMethod'] = df['PaymentMethod'].map({
-        'Credit card (automatic)': 3,
-        'Electronic check': 2,
-        'Bank transfer (automatic)': 1,
-        'Mailed check': 0})
+    if not expand_classes:
+        df['InternetService'] = df['InternetService'].map({'Fiber optic': 2, 'DSL': 1, 'No': 0})
+        df['Contract'] = df['Contract'].map({'Two year': 2, 'One year': 1, 'Month-to-month': 0})
+        # Note that the PaymentMethod column contains some entries that are marked automatic
+        # that's probably correlated with discontinuation in some way.
+        df['PaymentMethod'] = df['PaymentMethod'].map({
+            'Credit card (automatic)': 3,
+            'Electronic check': 1,
+            'Bank transfer (automatic)': 2,
+            'Mailed check': 0})
+    else:
+        df = expand_class(df, 'PaymentMethod', ['Credit card (automatic)', 'Electronic check', 'Bank transfer (automatic)', 'Mailed check'])
+        df = expand_class(df, 'Contract', ['Two year', 'One year', 'Month-to-month'])
+        df = expand_class(df, 'InternetService', ['Fiber optic', 'DSL', 'No'])
+        
     df.drop('customerID', axis=1, inplace=True)
     mean = df.mean()
     df.fillna(mean, inplace=True)
