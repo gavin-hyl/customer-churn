@@ -1,5 +1,13 @@
 import pandas as pd
 
+def target_encode(df: pd.DataFrame):
+    from category_encoders import TargetEncoder
+    encoder = TargetEncoder()
+    df['InternetService'] = encoder.fit_transform(df['InternetService'], df['Discontinued'])
+    df['Contract'] = encoder.fit_transform(df['Contract'], df['Discontinued'])
+    df['PaymentMethod'] = encoder.fit_transform(df['PaymentMethod'], df['Discontinued'])
+    return df
+
 def expand_class(df: pd.DataFrame, header: str, classes: list[str]):
     df_cpy = df
     for class_name in classes:
@@ -7,7 +15,7 @@ def expand_class(df: pd.DataFrame, header: str, classes: list[str]):
     df_cpy.drop(header, axis='columns', inplace=True)
     return df_cpy
 
-def numerize_csv(path: str, train: bool=True, expand_classes: bool=False):
+def numerize_csv(path: str, train: bool=True, expand_classes: bool=False, target_encode: bool=False):
     ''' Takes a path to a project csv and converts its entries to numerical '''
     df = pd.read_csv(path)
     df['gender'] = (df['gender'] == 'Female').astype(int)
@@ -29,14 +37,16 @@ def numerize_csv(path: str, train: bool=True, expand_classes: bool=False):
 
     if not expand_classes:
         df['InternetService'] = df['InternetService'].map({'Fiber optic': 2, 'DSL': 1, 'No': 0})
-        df['Contract'] = df['Contract'].map({'Two year': 2, 'One year': 1, 'Month-to-month': 0})
+        df['Contract'] = df['Contract'].map({'Two year': 4, 'One year': 3, 'Month-to-month': 0})
         # Note that the PaymentMethod column contains some entries that are marked automatic
         # that's probably correlated with discontinuation in some way.
         df['PaymentMethod'] = df['PaymentMethod'].map({
-            'Credit card (automatic)': 3,
+            'Credit card (automatic)': 6,
             'Electronic check': 1,
-            'Bank transfer (automatic)': 2,
+            'Bank transfer (automatic)': 5,
             'Mailed check': 0})
+    elif target_encode:
+        df = target_encode(df)
     else:
         df = expand_class(df, 'PaymentMethod', ['Credit card (automatic)', 'Electronic check', 'Bank transfer (automatic)', 'Mailed check'])
         df = expand_class(df, 'Contract', ['Two year', 'One year', 'Month-to-month'])
