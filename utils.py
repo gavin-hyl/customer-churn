@@ -135,9 +135,9 @@ def combine_related_columns_test(df: pd.DataFrame):
                                         + df_cpy.pop('StreamingMovies').values * (1 - TV_STREAM_WEIGHT)
     return df_cpy
 
-def write_submission(preds):
+def write_submission(preds, file: str='submission.csv'):
     ''' Utility function to write to the submission file. '''
-    df = pd.read_csv('submission.csv')
+    df = pd.read_csv(file)
     pred_len = len(preds)
     target_len = len(df['ID'])
     if pred_len != target_len:
